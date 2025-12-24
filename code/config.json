@@ -1,0 +1,38 @@
+{
+    "screen_width": 800,
+    "screen_height": 800,
+    "caption": "Arcade Runner",
+    "x_position": 200,
+    "ground_y": 585,
+    "difficulty": "medium",
+    "difficulty_settings": {
+        "easy": {
+            "spawn_rate": 2500,
+            "speed_range": [
+                3,
+                5
+            ]
+        },
+        "medium": {
+            "spawn_rate": 1800,
+            "speed_range": [
+                5,
+                7
+            ]
+        },
+        "hard": {
+            "spawn_rate": 1200,
+            "speed_range": [
+                7,
+                10
+            ]
+        }
+    },
+    "physics": {
+        "rise_speed": 10,
+        "fall_speed": 10,
+        "animation_speed": 220,
+        "scroll_speed": 2
+    },
+    "assets_path": "../assets"
+}
