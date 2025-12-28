@@ -1,9 +1,12 @@
 import pygame
 import sys
-from core.settings import SCREEN_WIDTH, SCREEN_HEIGHT, CAPTION, CURRENT_SETTINGS
+import os
+from core.settings import SCREEN_WIDTH, SCREEN_HEIGHT, CAPTION, CURRENT_SETTINGS, BASE_DIR
 
 # Initialize Pygame
 pygame.init()
+pygame.mixer.init()
+
 CLOCK = pygame.time.Clock()
 SCREEN = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption(CAPTION)
@@ -14,70 +17,155 @@ from core.player import Player
 from core.obstacles import create_obstacle, move_obstacles, draw_obstacles
 from core.collision import check_collision
 from core.ui import UI
+from core.intro_ui import IntroUI
+from core.over_ui import GameOverUI
 from core.background import Background
 
 # Load Assets
 game_assets.load()
 
+# Load Audio
+# Basic error handling for missing audio files
+intro_music_path = os.path.join(BASE_DIR, "../assets/intro.mp3")
+game_music_path = os.path.join(BASE_DIR, "../assets/game_audio.mp3")
+
+has_intro_music = os.path.exists(intro_music_path)
+has_game_music = os.path.exists(game_music_path)
+
+def play_music(music_type):
+    if music_type == "intro" and has_intro_music:
+        pygame.mixer.music.load(intro_music_path)
+        pygame.mixer.music.play(-1)
+    elif music_type == "game" and has_game_music:
+        pygame.mixer.music.load(game_music_path)
+        pygame.mixer.music.play(-1)
+    else:
+        pygame.mixer.music.stop()
+
 # Game Objects
 player = Player()
 ui = UI()
+intro_ui = IntroUI()
+game_over_ui = GameOverUI()
 background = Background()
 obstacle_list = []
 score = 0
-game_active = False
+
+# Game States: 'intro', 'playing', 'game_over'
+game_state = "intro" 
+game_paused = False
+current_music = None
+
+play_music("intro")
+current_music = "intro"
 
 SPAWN_OBSTACLE = pygame.USEREVENT + 1
 pygame.time.set_timer(SPAWN_OBSTACLE, CURRENT_SETTINGS["spawn_rate"])
 
 while True:
-    for event in pygame.event.get():
+    events = pygame.event.get()
+    for event in events:
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
         
-        if game_active:
-            if event.type == SPAWN_OBSTACLE:
-                obstacle_list.append(create_obstacle())
-        else:
+        # Global Pause (only if playing)
+        if game_state == "playing":
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                game_active = True
-                player.reset()
-                obstacle_list.clear() # Clear obstacles on restart
-                score = 0
+                game_paused = not game_paused
+                # Pause/Unpause music?
+                if game_paused:
+                    pygame.mixer.music.pause()
+                else:
+                    pygame.mixer.music.unpause()
 
-    # Draw Background
-    if game_active:
-        background.update()
-    background.draw(SCREEN)
-
-    if game_active:
-        # Input Handling & Player Update
-        keys = pygame.key.get_pressed()
-        player_surf, player_rect = player.update(keys)
+    # --- STATE MACHINE ---
+    
+    if game_state == "intro":
+        intro_ui.draw(SCREEN)
         
-        # Draw Player
+        # Event handling for intro
+        for event in events:
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if intro_ui.check_click(event.pos):
+                    game_state = "playing"
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                game_state = "playing"
+        
+        if game_state == "playing":
+             score = 0
+             obstacle_list = []
+             player.reset()
+             play_music("game")
+             current_music = "game"
+             
+    elif game_state == "playing":
+        # Draw Background
+        if not game_paused:
+            background.update()
+        background.draw(SCREEN)
+
+        if not game_paused:
+            # Events
+            for event in events:
+                if event.type == SPAWN_OBSTACLE:
+                    target_x = player.rect.centerx if player.rect else player.x_position
+                    obstacle_list.append(create_obstacle(target_x))
+        
+            # Input & Updates
+            keys = pygame.key.get_pressed()
+            player_surf, player_rect = player.update(keys)
+            
+            # Obstacles
+            score_increment = move_obstacles(obstacle_list)
+            score += score_increment
+            
+            # Collision
+            if player_rect and check_collision(player, obstacle_list):
+                 game_state = "game_over"
+                 play_music("intro") # Switch back to intro/menu music for game over
+                 current_music = "intro"
+        
+        else:
+             # Paused View
+             player_surf, player_rect = player.get_current_surface(), player.rect
+             # Draw "PAUSED" text overlay
+             font = pygame.font.Font(None, 60)
+             pause_surf = font.render("PAUSED", True, (255, 255, 255))
+             pause_rect = pause_surf.get_rect(center=(SCREEN_WIDTH//2, SCREEN_HEIGHT//2))
+             
+        # Drawing
         if player_surf and player_rect:
             SCREEN.blit(player_surf, player_rect)
-        
-        # Obstacle Logic
-        score_increment = move_obstacles(obstacle_list)
-        score += score_increment
-        draw_obstacles(SCREEN, obstacle_list)
-        
-        # Collision
-        if check_collision(player_rect, obstacle_list):
-            game_active = False
-            # set player to idle or just stop
-            game_active = False 
             
+        draw_obstacles(SCREEN, obstacle_list)
         ui.draw_score(SCREEN, score)
         
-    else:
-        if score == 0:
-            ui.draw_start_screen(SCREEN)
-        else:
-            ui.draw_game_over(SCREEN, score)
+        if game_paused:
+             # Draw pause overlay on top
+             SCREEN.blit(pause_surf, pause_rect)
+
+    elif game_state == "game_over":
+        # Draw game objects static in background for effect
+        background.draw(SCREEN)
+        # Maybe draw player/obstacles static? Defaults to just background + UI usually looks cleaner
+        
+        game_over_ui.draw(SCREEN, score)
+        
+        for event in events:
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if game_over_ui.check_click(event.pos):
+                    game_state = "playing"
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                 game_state = "playing"
+        
+        if game_state == "playing":
+             score = 0
+             obstacle_list = []
+             player.reset()
+             play_music("game")
+             current_music = "game"
+
 
     pygame.display.update()
     CLOCK.tick(60)
