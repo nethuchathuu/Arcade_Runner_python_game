@@ -13,7 +13,7 @@ def create_obstacle(player_x=None):
     
     if obstacle_type == "car":
         img = game_assets.car_img
-        rect = img.get_rect(midbottom=(SCREEN_WIDTH + 100, GROUND_Y + 40))
+        rect = img.get_rect(midbottom=(SCREEN_WIDTH + 100, GROUND_Y + 80))
         y_speed = 0
     elif obstacle_type == "bird":
         img = game_assets.bird_img

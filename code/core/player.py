@@ -168,7 +168,7 @@ class Player:
              if self.state == "roll":
                  draw_y += self.roll_offset
                  
-             self.rect = current_surface.get_rect(center=(int(self.x_position), int(draw_y)))
+             self.rect = current_surface.get_rect(center=(int(self.x_position), int(draw_y+10)))
              return current_surface, self.rect
             
         return None, None

@@ -82,9 +82,9 @@ class Assets:
         
         self.background = load_image("background.jpg", (SCREEN_WIDTH, SCREEN_HEIGHT))
         
-        self.car_img = load_image("carO.png", (140, 80))
+        self.car_img = load_image("carO.png", (150, 90))
         self.bird_img = load_image("birdO.png", (100, 70))
-        self.missile_img = load_image("missileO.png", (120, 50))
+        self.missile_img = load_image("missileO.png", (110, 60))
         self.bomb_img = load_image("bombO.png", (90, 90))
 
 game_assets = Assets()
