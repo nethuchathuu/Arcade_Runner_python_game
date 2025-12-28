@@ -55,7 +55,8 @@ class Assets:
     def __init__(self):
         self.standing_surface = None
         self.run_frames = []
-        self.jumping_surface = None
+        self.roll_frames = []
+        self.jump_frames = []
         self.background = None
         self.car_img = None
         self.bird_img = None
@@ -71,13 +72,19 @@ class Assets:
             load_image("runGRight.png", (160, 200))
         ]
         
-        self.jumping_surface = load_image("jumpO.png", (180, 240))
+        self.roll_frames = [
+             load_image(f"roll{i}.png", (120, 90), remove_bg=True) for i in range(1, 8)
+        ]
+
+        self.jump_frames = [
+            load_image(f"jump{i}.png", (130, 185)) for i in range(1, 6)
+        ]
         
         self.background = load_image("background.jpg", (SCREEN_WIDTH, SCREEN_HEIGHT))
         
-        self.car_img = load_image("carO.png", (140, 80))
+        self.car_img = load_image("carO.png", (150, 90))
         self.bird_img = load_image("birdO.png", (100, 70))
-        self.missile_img = load_image("missileO.png", (120, 50))
+        self.missile_img = load_image("missileO.png", (110, 60))
         self.bomb_img = load_image("bombO.png", (90, 90))
 
 game_assets = Assets()
