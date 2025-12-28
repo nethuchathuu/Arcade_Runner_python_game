@@ -76,7 +76,7 @@ class Player:
              if keys[pygame.K_RIGHT]:
                  # Continuous Roll
                  self.vel_x = ROLL_SPEED
-                 self.x_position += self.vel_x
+                 # self.x_position += self.vel_x 
                  self.y_position = GROUND_Y # Lock Y to ground
                  
                  # Loop Animation (Frames 3,4,5 -> indices 2,3,4)
@@ -112,7 +112,7 @@ class Player:
             # Physics
             self.vel_y += GRAVITY
             self.y_position += self.vel_y
-            self.x_position += JUMP_HORIZONTAL_SPEED
+            # self.x_position += JUMP_HORIZONTAL_SPEED # Handled by background scroll
             
             # Landing Check
             if self.y_position >= GROUND_Y:

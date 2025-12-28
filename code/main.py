@@ -1,7 +1,7 @@
 import pygame
 import sys
 import os
-from core.settings import SCREEN_WIDTH, SCREEN_HEIGHT, CAPTION, CURRENT_SETTINGS, BASE_DIR
+from core.settings import SCREEN_WIDTH, SCREEN_HEIGHT, CAPTION, CURRENT_SETTINGS, BASE_DIR, JUMP_HORIZONTAL_SPEED
 
 # Initialize Pygame
 pygame.init()
@@ -100,41 +100,47 @@ while True:
              current_music = "game"
              
     elif game_state == "playing":
-        # Draw Background
         if not game_paused:
-            background.update()
-        background.draw(SCREEN)
-
-        if not game_paused:
-            # Events
+            # 1. Events
             for event in events:
                 if event.type == SPAWN_OBSTACLE:
                     target_x = player.rect.centerx if player.rect else player.x_position
                     obstacle_list.append(create_obstacle(target_x))
         
-            # Input & Updates
+            # 2. Player Update (Determine State)
             keys = pygame.key.get_pressed()
             player_surf, player_rect = player.update(keys)
             
-            # Obstacles
-            score_increment = move_obstacles(obstacle_list)
+            # 3. Calculate Scroll Boost for Rolling Effect
+            scroll_boost = 0
+            if player.state == "roll":
+                scroll_boost = 10 # Uniform 10px shift for world "moving around player"
+            elif player.state == "jump":
+                scroll_boost = JUMP_HORIZONTAL_SPEED
+            
+            # 4. Background Update
+            background.update(scroll_boost)
+            
+            # 5. Obstacle Update
+            score_increment = move_obstacles(obstacle_list, scroll_boost)
             score += score_increment
             
-            # Collision
+            # 6. Collision
             if player_rect and check_collision(player, obstacle_list):
                  game_state = "game_over"
-                 play_music("intro") # Switch back to intro/menu music for game over
+                 play_music("intro")
                  current_music = "intro"
         
         else:
-             # Paused View
+             # Paused Logic
              player_surf, player_rect = player.get_current_surface(), player.rect
-             # Draw "PAUSED" text overlay
              font = pygame.font.Font(None, 60)
              pause_surf = font.render("PAUSED", True, (255, 255, 255))
              pause_rect = pause_surf.get_rect(center=(SCREEN_WIDTH//2, SCREEN_HEIGHT//2))
-             
-        # Drawing
+
+        # --- DRAWING PHASE ---
+        background.draw(SCREEN)
+        
         if player_surf and player_rect:
             SCREEN.blit(player_surf, player_rect)
             
@@ -142,7 +148,6 @@ while True:
         ui.draw_score(SCREEN, score)
         
         if game_paused:
-             # Draw pause overlay on top
              SCREEN.blit(pause_surf, pause_rect)
 
     elif game_state == "game_over":

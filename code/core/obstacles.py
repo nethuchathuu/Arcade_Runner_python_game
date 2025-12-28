@@ -35,26 +35,27 @@ def create_obstacle(player_x=None):
 
     return {"type": obstacle_type, "rect": rect, "img": img, "speed": speed, "y_speed": y_speed}
 
-def move_obstacles(obstacles):
+def move_obstacles(obstacles, extra_speed=0):
     score_increment = 0
     for obstacle in obstacles[:]: 
         
-        # Apply movement based on type configuration (implicit by speed values set in create)
+        # Apply movement
+        # Horizontal (Speed + Scroll Effect from Rolling)
+        obstacle["rect"].x -= (obstacle["speed"] + extra_speed)
+        
+        # Vertical (Bombs)
         if obstacle["type"] == "bomb":
              obstacle["rect"].y += obstacle["y_speed"]
-             # Bounds check for bomb (bottom of screen)
-             if obstacle["rect"].top > GROUND_Y: # Hit ground
-                 obstacles.remove(obstacle)
-                 # Bombs don't give score when hitting ground? Or maybe they do.
-                 # User said "increase on obstacle passed". 
-                 # For falling bomb, avoiding it means it hits ground.
-                 score_increment += 10
-        else:
-             obstacle["rect"].x -= obstacle["speed"]
-             # Bounds check for side moving obstacles
-             if obstacle["rect"].right < 0:
-                 obstacles.remove(obstacle)
-                 score_increment += 10
+
+        # Removal Checks
+        # 1. Went off screen to the left (applicable to all if scrolling fast)
+        if obstacle["rect"].right < 0:
+            obstacles.remove(obstacle)
+            score_increment += 10
+        # 2. Bomb hit the ground
+        elif obstacle["type"] == "bomb" and obstacle["rect"].top > GROUND_Y:
+            obstacles.remove(obstacle)
+            score_increment += 10
                  
     return score_increment
 

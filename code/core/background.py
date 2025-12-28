@@ -9,10 +9,11 @@ class Background:
         self.x2 = SCREEN_WIDTH
         self.speed = SCROLL_SPEED
 
-    def update(self):
+    def update(self, extra_speed=0):
         # Move both backgrounds to the left
-        self.x1 -= self.speed
-        self.x2 -= self.speed
+        current_speed = self.speed + extra_speed
+        self.x1 -= current_speed
+        self.x2 -= current_speed
 
         # Check if off-screen (reset to the right of the other image)
         if self.x1 <= -SCREEN_WIDTH:
