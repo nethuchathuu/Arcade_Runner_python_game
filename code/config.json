@@ -2,7 +2,7 @@
     "screen_width": 1500,
     "screen_height": 800,
     "caption": "Arcade Runner",
-    "x_position": 200,
+    "x_position": 750,
     "ground_y": 585,
     "difficulty": "medium",
     "difficulty_settings": {
@@ -39,7 +39,7 @@
         "jump_horizontal_speed": 3,
         "extra_force_holding": -1.0,
         "max_hold_time": 1000,
-        "max_jump_height": 720,
+        "max_jump_height": 500,
         "max_forward_displacement": 500
     },
     "assets_path": "../assets"
