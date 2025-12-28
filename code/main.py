@@ -86,10 +86,7 @@ while True:
         
         # Event handling for intro
         for event in events:
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if intro_ui.check_click(event.pos):
-                    game_state = "playing"
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+            if intro_ui.handle_event(event) == "start_game":
                 game_state = "playing"
         
         if game_state == "playing":
